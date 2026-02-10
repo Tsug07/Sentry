@@ -1,0 +1,15 @@
+{
+  "expected_files": [
+    "CND MUNICIPAL",
+    "CND RFB",
+    "CND FGTS",
+    "CND PROC",
+    "CND ESTADUAL"
+  ],
+  "target_line": "CERTIDÃO POSITIVA DE DÉBITOS - CPD",
+  "last_folder": "Z:/000 - CONTROLE DE CND",
+  "mode": "Verificar Vencimento",
+  "ignored_folders": [
+    "001 - RFB"
+  ]
+}

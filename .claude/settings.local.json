@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip install:*)",
+      "Bash(git -C \"x:\\\\05. TECNOLOGIA DA INFORMAÇÃO\\\\04. HUGO ALMEIDA\\\\Sentry\" status)",
+      "Bash(git config:*)",
+      "Bash(git -C \"x:\\\\05. TECNOLOGIA DA INFORMAÇÃO\\\\04. HUGO ALMEIDA\\\\Sentry\" remote -v)",
+      "Bash(git -C \"x:\\\\05. TECNOLOGIA DA INFORMAÇÃO\\\\04. HUGO ALMEIDA\\\\Sentry\" log --oneline -5)",
+      "Bash(git -C \"x:\\\\05. TECNOLOGIA DA INFORMAÇÃO\\\\04. HUGO ALMEIDA\\\\Sentry\" diff README.md)",
+      "Bash(git -C \"x:\\\\05. TECNOLOGIA DA INFORMAÇÃO\\\\04. HUGO ALMEIDA\\\\Sentry\" add README.md Sentry.py)",
+      "Bash(git -C \"x:\\\\05. TECNOLOGIA DA INFORMAÇÃO\\\\04. HUGO ALMEIDA\\\\Sentry\" push origin main)",
+      "Bash(git -C \"x:\\\\05. TECNOLOGIA DA INFORMAÇÃO\\\\04. HUGO ALMEIDA\\\\Sentry\" add README.md atualizar.bat)",
+      "Bash(git -C \"x:\\\\05. TECNOLOGIA DA INFORMAÇÃO\\\\04. HUGO ALMEIDA\\\\Sentry\" commit -m \"$\\(cat <<''EOF''\nAdicionar badges ao README e script de atualizacao\n\n- Adiciona badges profissionais \\(Python, CustomTkinter, Windows, MIT, Status\\)\n- Cria atualizar.bat para facilitar git pull na pasta de rede\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(pip show:*)",
+      "Bash(python -c:*)"
+    ]
+  }
+}

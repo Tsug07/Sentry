@@ -5,6 +5,7 @@ from tkinter import filedialog, messagebox, ttk
 import PyPDF2
 from datetime import datetime
 import os
+import sys
 import logging
 import time
 from openpyxl import Workbook
@@ -14,6 +15,9 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import json
 from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.formatting.rule import FormulaRule
+
+# Para logo
+from PIL import Image, ImageDraw
 
 # Para gráficos
 import matplotlib.pyplot as plt
@@ -39,6 +43,17 @@ class CNDDashboard:
         self.root.title("Sentry - Controle de Certidões")
         self.root.geometry("1400x800")
         self.root.minsize(1200, 700)
+
+        # Definir caminho base (funciona tanto em .py quanto em .exe)
+        if getattr(sys, 'frozen', False):
+            self.base_path = os.path.dirname(sys.executable)
+        else:
+            self.base_path = os.path.dirname(os.path.abspath(__file__))
+
+        # Favicon da janela
+        icon_path = os.path.join(self.base_path, "assets", "favicon.ico")
+        if os.path.exists(icon_path):
+            self.root.iconbitmap(icon_path)
 
         self.folder_path = tk.StringVar()
         self.processing = False
@@ -135,13 +150,28 @@ class CNDDashboard:
         main_container.pack(fill="both", expand=True, padx=10, pady=10)
 
         # ============ HEADER ============
-        header_frame = ctk.CTkFrame(main_container, height=60)
+        header_frame = ctk.CTkFrame(main_container, height=80)
         header_frame.pack(fill="x", padx=5, pady=(5, 10))
         header_frame.pack_propagate(False)
 
-        title_label = ctk.CTkLabel(header_frame, text="📊 CND Dashboard",
+        # Logo no header com circulo branco
+        logo_path = os.path.join(self.base_path, "assets", "Sentry_logo.png")
+        if os.path.exists(logo_path):
+            original = Image.open(logo_path).convert("RGBA")
+            size = 200  # resolucao interna para qualidade
+            circle_bg = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+            draw = ImageDraw.Draw(circle_bg)
+            draw.ellipse([0, 0, size - 1, size - 1], fill=(255, 255, 255, 255))
+            padding = 20
+            logo_resized = original.resize((size - padding * 2, size - padding * 2), Image.LANCZOS)
+            circle_bg.paste(logo_resized, (padding, padding), logo_resized)
+            logo_image = ctk.CTkImage(light_image=circle_bg, dark_image=circle_bg, size=(60, 60))
+            logo_label = ctk.CTkLabel(header_frame, image=logo_image, text="")
+            logo_label.pack(side="left", padx=(20, 5), pady=10)
+
+        title_label = ctk.CTkLabel(header_frame, text="Sentry - CND Dashboard",
                                     font=ctk.CTkFont(size=24, weight="bold"))
-        title_label.pack(side="left", padx=20, pady=10)
+        title_label.pack(side="left", padx=(5, 20), pady=10)
 
         # Controles no header
         controls_frame = ctk.CTkFrame(header_frame, fg_color="transparent")
