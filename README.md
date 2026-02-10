@@ -1,5 +1,11 @@
 # Sentry - Controle de Certidoes
 
+![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![CustomTkinter](https://img.shields.io/badge/CustomTkinter-GUI-blue?style=for-the-badge)
+![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
+![Status](https://img.shields.io/badge/Status-Ativo-brightgreen?style=for-the-badge)
+
 Dashboard para monitoramento e controle de Certidoes Negativas de Debito (CNDs) de empresas. Identifica certidoes vencidas, faltantes e positivas de forma automatizada.
 
 ## Funcionalidades
