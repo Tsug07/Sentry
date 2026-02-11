@@ -72,6 +72,7 @@ class CNDDashboard:
             "completo": 0,
             "incompleto": 0,
             "vencidas": 0,
+            "positivas": 0,
             "validas": 0,
             "erro": 0
         }
@@ -273,9 +274,11 @@ class CNDDashboard:
         # Linha 1: Total e Completas
         self.card_total = self.create_stat_card(cards_grid, "Total", "0", "#3b82f6", 0, 0, filter_key="total")
         self.card_completo = self.create_stat_card(cards_grid, "Completas", "0", "#22c55e", 0, 1, filter_key="completo")
-        # Linha 2: Vencidas, Faltantes, Incompletas
-        self.card_vencidas = self.create_stat_card(cards_grid, "Vencidas", "0", "#ef4444", 1, 0, filter_key="vencidas")
-        self.card_faltantes = self.create_stat_card(cards_grid, "Faltantes", "0", "#f97316", 1, 1, filter_key="faltantes")
+        # Linha 2: Positivas e Vencidas/Erros
+        self.card_positivas = self.create_stat_card(cards_grid, "Positivas", "0", "#dc2626", 1, 0, filter_key="positivas")
+        self.card_vencidas = self.create_stat_card(cards_grid, "Vencidas", "0", "#ef4444", 1, 1, filter_key="vencidas")
+        # Linha 3: Faltantes
+        self.card_faltantes = self.create_stat_card(cards_grid, "Faltantes", "0", "#f97316", 2, 0, filter_key="faltantes")
 
         # ============ GRÁFICO ============
         chart_frame = ctk.CTkFrame(left_panel)
@@ -346,7 +349,8 @@ class CNDDashboard:
                                   style="Dashboard.Treeview")
         self.tree.pack(side="left", fill="both", expand=True)
 
-        # Tags para cores (prioridade: vencida > faltando > incompleto > completo)
+        # Tags para cores (prioridade: positiva > vencida > faltando > incompleto > completo)
+        self.tree.tag_configure("positiva", background="#7f1d1d", foreground="#fca5a5")  # Vermelho forte - certidão positiva/falência
         self.tree.tag_configure("vencida", background="#6b1a1a", foreground="white")  # Vermelho escuro
         self.tree.tag_configure("faltando", background="#6b4a1a", foreground="white")  # Laranja escuro
         self.tree.tag_configure("incompleto", background="#4d4d1a", foreground="white")  # Amarelo escuro
@@ -447,6 +451,10 @@ class CNDDashboard:
                     # Modo positiva: filtra por erro
                     self.filtered_data = [r for r in self.results_data
                                            if r.get("status", "").upper() == "ERRO"]
+            elif filter_key == "positivas":
+                # Filtra empresas que têm certidão positiva (CPD ou FALÊNCIA)
+                self.filtered_data = [r for r in self.results_data
+                                       if r.get("positive_details")]
             elif filter_key == "faltantes":
                 # Filtra empresas que têm alguma CND faltando (NÃO)
                 self.filtered_data = [r for r in self.results_data
@@ -465,7 +473,7 @@ class CNDDashboard:
 
         # Atualizar label de filtro
         if self.active_filter:
-            filter_names = {"completo": "Completas", "incompleto": "Incompletas", "vencidas": "Vencidas/Erros", "faltantes": "Faltantes"}
+            filter_names = {"completo": "Completas", "incompleto": "Incompletas", "positivas": "Positivas", "vencidas": "Vencidas/Erros", "faltantes": "Faltantes"}
             self.progress_label.configure(text=f"Filtro: {filter_names.get(self.active_filter, '')} ({len(self.filtered_data)})")
         else:
             self.progress_label.configure(text=f"Total: {len(self.results_data)} empresas")
@@ -475,6 +483,7 @@ class CNDDashboard:
         cards = {
             "total": self.card_total,
             "completo": self.card_completo,
+            "positivas": self.card_positivas,
             "vencidas": self.card_vencidas,
             "faltantes": self.card_faltantes
         }
@@ -493,6 +502,7 @@ class CNDDashboard:
             "incompleto": 0,
             "vencidas": 0,
             "faltantes": 0,
+            "positivas": 0,
             "validas": 0,
             "erro": 0
         }
@@ -516,6 +526,12 @@ class CNDDashboard:
             if any(c == "NÃO" for c in campos):
                 self.stats["faltantes"] += 1
 
+            # Contar positivas (modo positiva)
+            if mode == "Verificar Positiva":
+                positive_details = r.get("positive_details", [])
+                if positive_details:
+                    self.stats["positivas"] += 1
+
             # Contar vencidas (só no modo vencimento)
             if mode == "Verificar Vencimento":
                 if any(c == "VENCIDA" for c in campos):
@@ -523,7 +539,7 @@ class CNDDashboard:
                 elif all(c == "VÁLIDA" for c in campos if c and c != "NÃO"):
                     self.stats["validas"] += 1
 
-        # Atualizar cards (agora usam dicionário)
+        # Atualizar cards
         self.card_total["value_lbl"].configure(text=str(self.stats["total"]))
         self.card_completo["value_lbl"].configure(text=str(self.stats["completo"]))
         self.card_faltantes["value_lbl"].configure(text=str(self.stats["faltantes"]))
@@ -531,9 +547,13 @@ class CNDDashboard:
         if mode == "Verificar Vencimento":
             self.card_vencidas["value_lbl"].configure(text=str(self.stats["vencidas"]))
             self.card_vencidas["title_lbl"].configure(text="Vencidas")
+            self.card_positivas["value_lbl"].configure(text="—")
+            self.card_positivas["title_lbl"].configure(text="Positivas")
         else:
             self.card_vencidas["value_lbl"].configure(text=str(self.stats["erro"]))
             self.card_vencidas["title_lbl"].configure(text="Erros")
+            self.card_positivas["value_lbl"].configure(text=str(self.stats["positivas"]))
+            self.card_positivas["title_lbl"].configure(text="Positivas")
 
         # Atualizar gráfico
         self.update_chart()
@@ -565,6 +585,11 @@ class CNDDashboard:
             labels.append(f'Completas\n({self.stats["completo"]})')
             sizes.append(self.stats["completo"])
             colors.append('#22c55e')
+
+        if self.stats.get("positivas", 0) > 0:
+            labels.append(f'Positivas\n({self.stats["positivas"]})')
+            sizes.append(self.stats["positivas"])
+            colors.append('#dc2626')
 
         if self.stats["incompleto"] > 0:
             labels.append(f'Incompletas\n({self.stats["incompleto"]})')
@@ -621,6 +646,12 @@ class CNDDashboard:
             details = f"Empresa: {result.get('empresa', 'N/A')}\n"
             details += f"Status: {result.get('status', 'N/A')}\n"
 
+            # Mostrar detalhes de certidão positiva
+            positive_details = result.get("positive_details", [])
+            if positive_details:
+                pos_texts = [f"{cnd} ({tipo})" for cnd, tipo in positive_details]
+                details += f"⚠ POSITIVA: {'; '.join(pos_texts)}\n"
+
             missing = result.get("missing_files", [])
             if missing:
                 details += f"Arquivos faltantes: {', '.join(missing)}\n"
@@ -631,7 +662,8 @@ class CNDDashboard:
                 if len(outras) > 3:
                     details += f" (+{len(outras)-3} mais)"
 
-            self.details_content.configure(text=details, text_color="white")
+            text_color = "#fca5a5" if positive_details else "white"
+            self.details_content.configure(text=details, text_color=text_color)
 
     def browse_folder(self):
         folder = filedialog.askdirectory(title="Selecione a pasta principal com as CNDs")
@@ -677,6 +709,7 @@ class CNDDashboard:
             "completo": 0,
             "incompleto": 0,
             "vencidas": 0,
+            "positivas": 0,
             "validas": 0,
             "erro": 0
         }
@@ -684,6 +717,7 @@ class CNDDashboard:
         # Atualizar cards
         self.card_total["value_lbl"].configure(text="0")
         self.card_completo["value_lbl"].configure(text="0")
+        self.card_positivas["value_lbl"].configure(text="0")
         self.card_vencidas["value_lbl"].configure(text="0")
         self.card_faltantes["value_lbl"].configure(text="0")
         self.update_card_highlights()
@@ -897,7 +931,7 @@ class CNDDashboard:
 
     def process_subfolder_positive(self, subfolder_path, subfolder_name, expected_files, target_line):
         found_files = {file_type: False for file_type in expected_files}
-        positive_cert_type = None
+        positive_details = []  # Lista de (tipo_cnd, tipo_positiva) ex: ("CND RFB", "FALÊNCIA")
         outras_cnds = []
         try:
             for file_name in os.listdir(subfolder_path):
@@ -908,11 +942,19 @@ class CNDDashboard:
                             matched = True
                             found_files[file_type] = True
                             pdf_path = os.path.join(subfolder_path, file_name)
-                            if self.check_positive_cert(pdf_path, target_line):
-                                positive_cert_type = file_type
+                            positive_result = self.check_positive_cert(pdf_path, target_line)
+                            if positive_result:
+                                positive_details.append((file_type, positive_result))
                     if not matched:
                         outras_cnds.append(file_name)
             missing_files = [f for f, found in found_files.items() if not found]
+
+            # Montar texto da coluna positiva com detalhes
+            if positive_details:
+                positiva_text = "; ".join(f"{cnd} ({tipo})" for cnd, tipo in positive_details)
+            else:
+                positiva_text = "NENHUMA"
+
             return {
                 "empresa": subfolder_name,
                 "municipal": "SIM" if found_files["CND MUNICIPAL"] else "NÃO",
@@ -920,7 +962,8 @@ class CNDDashboard:
                 "fgts": "SIM" if found_files["CND FGTS"] else "NÃO",
                 "proc": "SIM" if found_files["CND PROC"] else "NÃO",
                 "estadual": "SIM" if found_files["CND ESTADUAL"] else "NÃO",
-                "positiva": positive_cert_type if positive_cert_type else "NENHUMA",
+                "positiva": positiva_text,
+                "positive_details": positive_details,
                 "outras_cnds": outras_cnds,
                 "status": "COMPLETO" if not missing_files else "INCOMPLETO",
                 "missing_files": missing_files
@@ -930,17 +973,24 @@ class CNDDashboard:
             return {"empresa": subfolder_name, "status": "ERRO", "outras_cnds": [], "missing_files": []}
 
     def check_positive_cert(self, file_path, target_line):
+        """Verifica se o PDF contém certidão positiva (CPD).
+        Ignora 'Positiva com Efeitos de Negativa' (CPEND).
+        Retorna 'CPD' se positiva pura, ou None se negativa/CPEND."""
         try:
             with open(file_path, 'rb') as file:
                 pdf_reader = PyPDF2.PdfReader(file)
                 for page in pdf_reader.pages:
                     page_text = page.extract_text()
-                    if page_text and target_line in page_text:
-                        return True
-            return False
+                    if page_text:
+                        if target_line in page_text:
+                            # Verificar se NÃO é "com efeitos de negativa"
+                            text_upper = page_text.upper()
+                            if "COM EFEITOS DE NEGATIVA" not in text_upper and "COM EFEITO DE NEGATIVA" not in text_upper:
+                                return "CPD"
+            return None
         except Exception as e:
             logging.warning(f"Erro PDF '{file_path}': {e}")
-            return False
+            return None
 
     def check_due_date(self, file_name):
         try:
@@ -1000,7 +1050,12 @@ class CNDDashboard:
             self.tree["columns"] = columns
             for col in columns:
                 self.tree.heading(col, text=col, command=lambda c=col: self.sort_by_column(c))
-                width = 150 if col == "Empresa" else 80
+                if col == "Empresa":
+                    width = 150
+                elif col == "Positiva":
+                    width = 180
+                else:
+                    width = 80
                 self.tree.column(col, width=width, anchor="center")
             values = (result.get("empresa", ""), result.get("municipal", ""),
                       result.get("rfb", ""), result.get("fgts", ""),
@@ -1018,19 +1073,22 @@ class CNDDashboard:
                       result.get("proc", ""), result.get("estadual", ""),
                       result.get("status", ""))
 
-        # Determinar tag de cor com PRIORIDADE: vencida > faltando > incompleto > completo
+        # Determinar tag de cor com PRIORIDADE: positiva > vencida > faltando > incompleto > completo
         campos = [result.get("municipal"), result.get("rfb"), result.get("fgts"),
                   result.get("proc"), result.get("estadual")]
         status = result.get("status", "").upper()
 
         # Verificar condições em ordem de prioridade
+        has_positiva = bool(result.get("positive_details"))
         has_vencida = any(c == "VENCIDA" for c in campos)
         has_faltando = any(c == "NÃO" for c in campos)
         has_erro = status == "ERRO"
 
         # Determinar tag pela prioridade
-        if has_vencida:
-            tag = "vencida"  # Vermelho - mais crítico
+        if has_positiva:
+            tag = "positiva"  # Vermelho forte - certidão positiva/falência (mais crítico)
+        elif has_vencida:
+            tag = "vencida"  # Vermelho - vencida
         elif has_faltando:
             tag = "faltando"  # Laranja - CND não existe
         elif has_erro:
